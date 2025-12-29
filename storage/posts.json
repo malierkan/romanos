@@ -1,0 +1,15 @@
+[
+  {
+    "id": 1,
+    "channel_id": "@test_channelforromanos",
+    "text": "29 aralık postu blabla",
+    "image": null,
+    "file_id": null,
+    "datetime": "29.12.2025 02:20",
+    "repeat": true,
+    "last_posted_year": 2025,
+    "posted": false,
+    "attempts": 0,
+    "last_error": null
+  }
+]
