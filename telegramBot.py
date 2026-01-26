@@ -13,16 +13,16 @@ from scheduler import Scheduler
 from postRepository import PostRepository
 from zoneinfo import ZoneInfo
 from datetime import datetime
+from pathlib import Path
 
 
 ASK_TEXT, ASK_IMAGE = range(2)
-CATEGORY_ALTERNATE_HISTORY = "category_alternate_history"
+
 CATEGORY_HISTORY_TODAY = "category_history_today"
 CATEGORY_QUOTE = "category_quote"
-CATEGORY_THEOLOGY = "category_theology"
-CATEGORY_SCIENCE = "category_science"
+CATEGORY_QUESTION = "category_question"
 
-CATEGORY_HISTORY_DEFAULT_IMG = "/images/history.jpg"
+CATEGORY_HISTORY_DEFAULT_IMG = Path("./images/history.jpg")
 
 
 class TelegramBot:
@@ -49,24 +49,11 @@ class TelegramBot:
             )
             return ASK_TEXT
 
-        elif category == CATEGORY_THEOLOGY:
-            await query.edit_message_text("Rastgele Teolojik soru seçildi!")
-
-        elif category == CATEGORY_ALTERNATE_HISTORY:
-            await query.edit_message_text("Alternatif Tarih seçildi!")
-
         elif category == CATEGORY_QUOTE:
             await query.edit_message_text("Günün Sözü seçildi!")
 
-        elif category == CATEGORY_SCIENCE:
-            await query.edit_message_text("Bilimsel Soru seçildi!")
-
-    async def create_history_today_post(
-        self, update: Update, context: ContextTypes.DEFAULT_TYPE
-    ):
-        new_post = self.build_post(context.user_data, True)
-        await self.save_and_schedule_post(new_post, update)
-        return ConversationHandler.END
+        elif category == CATEGORY_QUESTION:
+            await query.edit_message_text("Sorular seçildi!")
 
     # Data fetchers
 
@@ -75,9 +62,9 @@ class TelegramBot:
 
         # if this category has a photo already pass it
         if self.current_category == CATEGORY_HISTORY_TODAY:
-            # TODO: create if condition here if default img exists
-            context.user_data["image"] = CATEGORY_HISTORY_DEFAULT_IMG
-            return await self.create_history_today_post(update, context)
+            if CATEGORY_HISTORY_DEFAULT_IMG.exists():
+                context.user_data["image"] = CATEGORY_HISTORY_DEFAULT_IMG
+                return await self.create_post(update, context)
 
         else:
             await update.message.reply_text(
@@ -94,12 +81,17 @@ class TelegramBot:
         await update.message.reply_text(
             "✅ Fotoğraf kaydedildi. Postu oluşturuyorum..."
         )
-        return await self.create_history_today_post(update, context)
+        return await self.create_post(update, context)
 
     async def skip_image(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         return await self.receive_image(update, context)
 
     # Post builders
+
+    async def create_post(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        new_post = self.build_post(context.user_data, True)
+        await self.save_and_schedule_post(new_post, update)
+        return ConversationHandler.END
 
     def build_post(
         self, context_user_data: dict, yearly_repeated: bool = False
@@ -140,18 +132,8 @@ class TelegramBot:
                     "📜 Tarihte Bugün", callback_data=CATEGORY_HISTORY_TODAY
                 )
             ],
-            [
-                InlineKeyboardButton(
-                    "❓ Rastgele Teolojik Soru", callback_data=CATEGORY_THEOLOGY
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    "⏳ Alternatif Tarih", callback_data=CATEGORY_ALTERNATE_HISTORY
-                )
-            ],
             [InlineKeyboardButton("💬 Günün Sözü", callback_data=CATEGORY_QUOTE)],
-            [InlineKeyboardButton("🔬 Bilimsel Soru", callback_data=CATEGORY_SCIENCE)],
+            [InlineKeyboardButton("Soru...", callback_data=CATEGORY_QUESTION)],
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
 
@@ -186,13 +168,13 @@ class TelegramBot:
             fallbacks=[CommandHandler("cancel", lambda u, c: ConversationHandler.END)],
         )
 
-        self.application.add_handler(conv_handler)
+        # self.application.add_handler(conv_handler)
 
-        self.application.add_handler(CommandHandler("start", self.start))
-        self.application.add_handler(CommandHandler("help", self.help_command))
-        self.application.add_handler(
-            MessageHandler(filters.TEXT & ~filters.COMMAND, self.echo)
-        )
+        # self.application.add_handler(CommandHandler("start", self.start))
+        # self.application.add_handler(CommandHandler("help", self.help_command))
+        # self.application.add_handler(
+        #     MessageHandler(filters.TEXT & ~filters.COMMAND, self.echo)
+        # )
 
         print("[+] Handlers have been added.")
         print("[i] Schedulers are being run...")
