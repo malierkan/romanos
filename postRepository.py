@@ -96,9 +96,14 @@ class PostRepository:
         if not repeat and post.get("posted"):
             return None
 
-        local_dt = datetime.strptime(
-            post["datetime"], time_format
-        ).replace(tzinfo=timezone)
+        # Check for leap year or invalid datetime
+        try:
+            local_dt = datetime.strptime(
+                post["datetime"], time_format
+            ).replace(tzinfo=timezone)
+        except ValueError as e:
+            print(f"[!] Error: {str(e)}")
+            return None
 
         if repeat:
             # if this post is already posted this year
