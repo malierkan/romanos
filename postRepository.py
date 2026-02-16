@@ -85,11 +85,7 @@ class PostRepository:
     # -------------------------
 
     def _get_target_datetime(
-        self,
-        post: dict,
-        now_local: datetime,
-        time_format: str,
-        timezone
+        self, post: dict, now_local: datetime, time_format: str, timezone
     ):
         repeat = post.get("repeat", False)
 
@@ -98,9 +94,10 @@ class PostRepository:
 
         # Check for leap year or invalid datetime
         try:
-            local_dt = datetime.strptime(
-                post["datetime"], time_format
-            ).replace(tzinfo=timezone)
+            local_dt = datetime.strptime(post["datetime"], time_format).replace(
+                tzinfo=timezone
+            )
+            print(local_dt)
         except ValueError as e:
             print(f"[!] Error: {str(e)}")
             return None
@@ -110,7 +107,12 @@ class PostRepository:
             if post.get("last_posted_year") == now_local.year:
                 return None
 
-            local_dt = local_dt.replace(year=now_local.year)
+            try:
+                local_dt = local_dt.replace(year=now_local.year)
+
+            except ValueError as e:
+                print(f"[!] Error: {str(e)}")
+                return None
 
             delta_seconds = (now_local - local_dt).total_seconds()
 
@@ -127,4 +129,3 @@ class PostRepository:
             return None
 
         return local_dt
-
