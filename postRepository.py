@@ -97,7 +97,7 @@ class PostRepository:
             local_dt = datetime.strptime(post["datetime"], time_format).replace(
                 tzinfo=timezone
             )
-            print(local_dt)
+
         except ValueError as e:
             print(f"[!] Error: {str(e)}")
             return None
